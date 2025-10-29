@@ -4,7 +4,7 @@ stages:
     deps:
       - src/prepare.py
       - params.yaml
-      - data/raw.dvc
+      - data/raw.csv
     outs:
       - data/train.csv
       - data/test.csv
@@ -17,8 +17,6 @@ stages:
       - params.yaml
     outs:
       - models/model.joblib
-    metrics:
-      - metrics.txt
 
   evaluate:
     cmd: python src/evaluate.py
