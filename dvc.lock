@@ -1,0 +1,66 @@
+schema: '2.0'
+stages:
+  prepare:
+    cmd: python src/prepare.py
+    deps:
+    - path: data/raw.csv
+      hash: md5
+      md5: 862ce971c086da8903e8ecc7c8a52c92
+      size: 49522076
+    - path: params.yaml
+      hash: md5
+      md5: 07f56ebcf148b103d4ed4d91085d2581
+      size: 137
+    - path: src/prepare.py
+      hash: md5
+      md5: e7e7c0244c678a144cb504aa9d97dfc8
+      size: 453
+    outs:
+    - path: data/test.csv
+      hash: md5
+      md5: 4d8158a3fb1d3917ed7d180d9d159d2a
+      size: 7563288
+    - path: data/train.csv
+      hash: md5
+      md5: 66ccfb7a354ecd8a524a3b80335c8fc6
+      size: 30261195
+  train:
+    cmd: python src/train.py
+    deps:
+    - path: data/train.csv
+      hash: md5
+      md5: 66ccfb7a354ecd8a524a3b80335c8fc6
+      size: 30261195
+    - path: params.yaml
+      hash: md5
+      md5: 07f56ebcf148b103d4ed4d91085d2581
+      size: 137
+    - path: src/train.py
+      hash: md5
+      md5: d1e108ffee6ef87b7cb053436e6d1e2a
+      size: 1130
+    outs:
+    - path: models/model.joblib
+      hash: md5
+      md5: f4d0f7ed11d8108944893b8270941f91
+      size: 3425857
+  evaluate:
+    cmd: python src/evaluate.py
+    deps:
+    - path: data/test.csv
+      hash: md5
+      md5: 4d8158a3fb1d3917ed7d180d9d159d2a
+      size: 7563288
+    - path: models/model.joblib
+      hash: md5
+      md5: f4d0f7ed11d8108944893b8270941f91
+      size: 3425857
+    - path: src/evaluate.py
+      hash: md5
+      md5: 7c905f42ce639424abb5bee07ad2a167
+      size: 1443
+    outs:
+    - path: metrics.txt
+      hash: md5
+      md5: f856503e64767856028538cea2e7281b
+      size: 24
