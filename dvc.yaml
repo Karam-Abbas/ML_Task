@@ -1,0 +1,30 @@
+stages:
+  prepare:
+    cmd: python src/prepare.py
+    deps:
+      - src/prepare.py
+      - params.yaml
+      - data/raw.dvc
+    outs:
+      - data/train.csv
+      - data/test.csv
+
+  train:
+    cmd: python src/train.py
+    deps:
+      - src/train.py
+      - data/train.csv
+      - params.yaml
+    outs:
+      - models/model.joblib
+    metrics:
+      - metrics.txt
+
+  evaluate:
+    cmd: python src/evaluate.py
+    deps:
+      - src/evaluate.py
+      - models/model.joblib
+      - data/test.csv
+    metrics:
+      - metrics.txt
