@@ -9,23 +9,23 @@ df = pd.read_csv("data/train.csv")
 
 target_col = params["training"]["target"]
 
-# 1️⃣ Drop completely irrelevant or high-cardinality columns
 drop_cols = [
     "property_id", "location_id", "page_url", "date_added",
-    "agency", "agent"  # optional: often too many unique values
+    "agency", "agent"
 ]
 df = df.drop(columns=drop_cols, errors="ignore")
 
-# 2️⃣ Separate features and target
 X = df.drop(columns=[target_col])
 y = df[target_col]
 
-# 3️⃣ Encode categorical columns
+# Encode categorical columns and save encoders
+encoders = {}
 for col in X.select_dtypes(include=["object"]).columns:
     le = LabelEncoder()
     X[col] = le.fit_transform(X[col].astype(str))
+    encoders[col] = le
 
-# 4️⃣ Train model
+# Train model
 model = RandomForestRegressor(
     n_estimators=params["model"]["n_estimators"],
     max_depth=params["model"]["max_depth"],
@@ -33,5 +33,7 @@ model = RandomForestRegressor(
 )
 model.fit(X, y)
 
+# Save model and encoders
 os.makedirs("models", exist_ok=True)
 joblib.dump(model, "models/model.joblib")
+joblib.dump(encoders, "models/encoders.joblib")

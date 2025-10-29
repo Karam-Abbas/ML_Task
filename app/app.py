@@ -1,58 +1,46 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify
 import joblib
 import pandas as pd
-import numpy as np
 import os
-import yaml
 
 app = Flask(__name__)
 
-# Load model
-model_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models", "model.joblib")
-model = joblib.load(model_path)
-
-# Load params to get feature information
-params_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "params.yaml")
-with open(params_path, "r") as f:
-    params = yaml.safe_load(f)
-
-# Load training data to get feature names
-train_data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "prepared_data.csv")
-train_data = pd.read_csv(train_data_path)
-feature_names = train_data.drop("price", axis=1).columns.tolist()
+# Load model and encoders
+model = joblib.load("../models/model.joblib")
+encoders = joblib.load("../models/encoders.joblib")
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return "🏠 House Price Prediction API is running!"
 
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Get data from request
-        data = request.json
-        
-        # Convert to DataFrame
-        df = pd.DataFrame([data])
-        
-        # One-hot encode categorical variables
-        df = pd.get_dummies(df, drop_first=True)
-        
-        # Ensure all expected columns are present
-        for col in feature_names:
-            if col not in df.columns:
-                df[col] = 0
-        
-        # Reorder columns to match training data
-        df = df[feature_names]
-        
-        # Make prediction
-        prediction = model.predict(df)[0]
-        
-        # Return prediction
-        return jsonify({'prediction': float(prediction)})
-    
-    except Exception as e:
-        return jsonify({'error': str(e)})
+        data = request.get_json(force=True)
+        input_df = pd.DataFrame([data])
 
-if __name__ == '__main__':
+        # Apply encoders for categorical columns
+        for col, le in encoders.items():
+            if col in input_df.columns:
+                input_df[col] = input_df[col].map(lambda x: x if x in le.classes_ else "unknown")
+                # Add unseen labels handling
+                if "unknown" not in le.classes_:
+                    le.classes_ = np.append(le.classes_, "unknown")
+                input_df[col] = le.transform(input_df[col].astype(str))
+
+        # Convert remaining columns to numeric if possible
+        for col in input_df.columns:
+            try:
+                input_df[col] = input_df[col].astype(float)
+            except:
+                pass
+
+        # Predict
+        pred = model.predict(input_df)[0]
+        return jsonify({"predicted_price": float(pred)})
+
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+if __name__ == "__main__":
     app.run(debug=True)
