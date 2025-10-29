@@ -2,8 +2,17 @@ from flask import Flask, request, jsonify
 import joblib
 import pandas as pd
 import os
-
+import subprocess
+import numpy as np
 app = Flask(__name__)
+
+# Go to project root before pulling
+os.chdir(os.path.dirname(os.path.dirname(__file__)))
+
+subprocess.run(["dvc", "pull", "models/model.joblib"], check=True)
+
+# Then back to app dir for Flask
+os.chdir(os.path.join(os.getcwd(), "app"))
 
 # Load model and encoders
 model = joblib.load("../models/model.joblib")
